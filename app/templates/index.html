@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% set active = 'home' %}
+{% block title %}FinTrack — Главная{% endblock %}
+{% block content %}
+    <section class="cards" id="summary">
+      <div class="card">
+        <div class="card-label">Доход за месяц</div>
+        <div class="card-value" id="stat-income">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Расход за месяц</div>
+        <div class="card-value" id="stat-expense">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Чистыми</div>
+        <div class="card-value" id="stat-net">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Общий баланс</div>
+        <div class="card-value" id="stat-balance">—</div>
+      </div>
+    </section>
+
+    <section class="panel" id="streak-panel">
+      <div class="panel-head">
+        <h2>🔥 Огонёк</h2>
+        <button class="btn btn-primary btn-sm" id="checkin-btn">Check-in дня</button>
+      </div>
+      <div id="streak-body" class="muted">Загрузка…</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Счета</h2>
+        <a class="btn btn-ghost" href="/accounts">Управление</a>
+      </div>
+      <ul id="accounts-list" class="list"><li class="muted">Загрузка…</li></ul>
+      <p class="muted small" id="transfers-note"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Категории</h2>
+        <a class="btn btn-ghost" href="/categories">Управление</a>
+      </div>
+      <ul id="categories-list" class="chips"><li class="muted">Загрузка…</li></ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Быстрые действия</h2>
+      </div>
+      <div class="quick-actions">
+        <a class="btn btn-primary btn-inline" href="/transactions">Добавить операцию</a>
+        <a class="btn btn-inline" href="/plans">Планы на будущее</a>
+      </div>
+    </section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/app.js"></script>
+{% endblock %}

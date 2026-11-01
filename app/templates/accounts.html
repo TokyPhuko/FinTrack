@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% set active = 'accounts' %}
+{% block title %}FinTrack — Счета{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Новый счёт</h2>
+  </div>
+  <form id="account-form" class="grid-form">
+    <label>Название
+      <input type="text" id="acc-name" placeholder="Например: Тинькофф" required maxlength="128">
+    </label>
+    <label>Тип
+      <select id="acc-type">
+        <option value="card">Карта</option>
+        <option value="cash">Наличные</option>
+        <option value="savings">Накопительный</option>
+        <option value="deposit">Вклад</option>
+      </select>
+    </label>
+    <label>Валюта
+      <input type="text" id="acc-currency" value="RUB" maxlength="8">
+    </label>
+    <label>Начальный баланс
+      <input type="number" id="acc-balance" step="0.01" value="0">
+    </label>
+    <div class="form-actions span-2">
+      <button type="submit" class="btn btn-primary btn-inline">Добавить счёт</button>
+      <span class="muted small" id="acc-error"></span>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Все счета</h2>
+    <span class="muted small" id="acc-total"></span>
+  </div>
+  <ul id="accounts-list" class="list"><li class="muted">Загрузка…</li></ul>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>🤝 Совместные счета</h2></div>
+  <p class="muted small">Открой счёт другому пользователю — вы оба увидите баланс и транзакции.</p>
+  <form id="share-form" class="grid-form">
+    <label>Счёт
+      <select id="share-acc"></select>
+    </label>
+    <label>Пользователь (логин)
+      <input type="text" id="share-user" placeholder="test" required maxlength="64">
+    </label>
+    <div class="form-actions span-2">
+      <button type="submit" class="btn btn-primary btn-inline">Открыть доступ</button>
+      <span class="muted small" id="share-error"></span>
+    </div>
+  </form>
+  <ul id="shared-list" class="list" style="margin-top:8px"></ul>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>👁 Шаринг данных</h2></div>
+  <p class="muted small">Позволяет другому пользователю видеть твои финансы (read-only).</p>
+  <form id="datashare-form" class="grid-form">
+    <label>Кому открыть (логин)
+      <input type="text" id="datashare-user" placeholder="test" required maxlength="64">
+    </label>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-inline">Поделиться</button>
+      <span class="muted small" id="datashare-error"></span>
+    </div>
+  </form>
+  <div id="datashare-list" class="muted small" style="margin-top:8px"></div>
+</section>
+
+<section class="panel muted small">
+  Перевод между счетами создаётся на странице «Траты» → тип «Перевод».
+  Он меняет балансы, но не считается расходом.
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/accounts.js"></script>
+{% endblock %}

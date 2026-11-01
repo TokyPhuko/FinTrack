@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FinTrack — вход</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <h1>FinTrack</h1>
+    <p class="muted">Персональный учёт финансов</p>
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    <form method="post" action="/login" class="stack">
+      <label>Логин
+        <input type="text" name="username" required autocomplete="username" autofocus>
+      </label>
+      <label>Пароль
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <button type="submit" class="btn btn-primary">Войти</button>
+    </form>
+  </main>
+</body>
+</html>

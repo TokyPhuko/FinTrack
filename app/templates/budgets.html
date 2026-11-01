@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% set active = 'budgets' %}
+{% block title %}FinTrack — Бюджеты{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Предупреждения</h2>
+    <button class="btn btn-ghost btn-sm" id="warn-refresh">Обновить</button>
+  </div>
+  <ul id="warnings-list" class="list"><li class="muted">Загрузка…</li></ul>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Бюджет vs факт</h2>
+    <input type="month" id="budget-month">
+  </div>
+  <div id="budget-progress" class="budget-bars"><p class="muted">Загрузка…</p></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Задать бюджет категории</h2></div>
+  <form id="budget-form" class="grid-form">
+    <label>Категория
+      <select id="budget-category" required></select>
+    </label>
+    <label>Сумма
+      <input type="number" id="budget-amount" step="0.01" min="0" required>
+    </label>
+    <div class="form-actions span-2">
+      <button type="submit" class="btn btn-primary btn-inline">Сохранить</button>
+      <span class="muted small" id="budget-error"></span>
+    </div>
+  </form>
+  <ul id="budgets-list" class="list" style="margin-top:12px"><li class="muted">—</li></ul>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/budgets.js"></script>
+{% endblock %}

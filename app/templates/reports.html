@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% set active = 'reports' %}
+{% block title %}FinTrack — Отчёты{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Excel-отчёт</h2>
+  </div>
+  <p class="muted small">
+    7 листов: Сводка · Транзакции · Бюджет · Сводная · План vs Факт · Счета и переводы · Динамика.
+    Переводы между счетами в листе расходов не считаются.
+  </p>
+  <div class="grid-form">
+    <label>Месяц
+      <input type="month" id="export-month">
+    </label>
+    <div class="form-actions span-2">
+      <a class="btn btn-primary btn-inline" id="export-btn" href="#">Скачать .xlsx</a>
+      <button type="button" class="btn btn-inline" id="export-tg-btn">📨 В Telegram</button>
+      <span class="muted small" id="export-tg-status"></span>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Еженедельный разбор</h2>
+    <button class="btn btn-ghost btn-sm" id="weekly-btn">Сгенерировать</button>
+  </div>
+  <div id="llm-status" class="muted small"></div>
+  <pre id="weekly-text" class="report-pre">Нажми «Сгенерировать» — LLM, а при недоступности шаблонный отчёт.</pre>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Быстрые цифры</h2></div>
+  <div class="cards">
+    <div class="card"><div class="card-label">Доход</div><div class="card-value" id="r-income">—</div></div>
+    <div class="card"><div class="card-label">Расход</div><div class="card-value" id="r-expense">—</div></div>
+    <div class="card"><div class="card-label">Чистыми</div><div class="card-value" id="r-net">—</div></div>
+    <div class="card"><div class="card-label">Баланс</div><div class="card-value" id="r-balance">—</div></div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/reports.js"></script>
+{% endblock %}

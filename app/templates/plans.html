@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set active = 'plans' %}
+{% block title %}FinTrack — Планы{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Новый план</h2>
+  </div>
+  <form id="plan-form" class="grid-form">
+    <label class="span-2">Название
+      <input type="text" id="plan-title" placeholder="Например: интернет, зарплата" required maxlength="256">
+    </label>
+
+    <label>Тип
+      <select id="plan-type">
+        <option value="expense">Расход</option>
+        <option value="income">Доход</option>
+      </select>
+    </label>
+
+    <label>Сумма
+      <input type="number" id="plan-amount" step="0.01" min="0.01" required>
+    </label>
+
+    <label>Категория
+      <select id="plan-category"></select>
+    </label>
+
+    <label>Счёт
+      <select id="plan-account"></select>
+    </label>
+
+    <label>Дата
+      <input type="date" id="plan-due" required>
+    </label>
+
+    <label>Повтор
+      <select id="plan-recurrence">
+        <option value="none">Не повторять</option>
+        <option value="daily">Каждый день</option>
+        <option value="weekly">Каждую неделю</option>
+        <option value="monthly">Каждый месяц</option>
+        <option value="yearly">Каждый год</option>
+      </select>
+    </label>
+
+    <div class="form-actions span-2">
+      <button type="submit" class="btn btn-primary btn-inline">Создать план</button>
+      <span class="muted small" id="plan-error"></span>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Планы</h2>
+    <div class="filters">
+      <select id="plan-status-filter">
+        <option value="pending">Ожидают</option>
+        <option value="all">Все</option>
+        <option value="done">Выполненные</option>
+        <option value="skipped">Пропущенные</option>
+      </select>
+    </div>
+  </div>
+  <ul id="plans-list" class="list plans-list"><li class="muted">Загрузка…</li></ul>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/plans.js"></script>
+{% endblock %}

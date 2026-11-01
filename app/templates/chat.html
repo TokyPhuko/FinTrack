@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% set active = 'chat' %}
+{% block title %}FinTrack — Чат{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Финансовый чат</h2>
+    <span class="muted small" id="llm-badge"></span>
+  </div>
+  <div id="chat-log" class="chat-log">
+    <div class="chat-msg bot">Спроси что угодно: «сколько потратил?», «где больше всего ушло?», «баланс?». Без LLM отвечу по данным из базы.</div>
+  </div>
+  <form id="chat-form" class="chat-form">
+    <input type="text" id="chat-input" placeholder="Например: сколько я потратил на кафе?" autocomplete="off" required>
+    <button type="submit" class="btn btn-primary">→</button>
+  </form>
+  <p class="muted small">Уровень ругательств: <span id="pol-label">—</span>
+    <button class="btn btn-ghost btn-sm" id="pol-btn">Сменить</button>
+  </p>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/chat.js"></script>
+{% endblock %}

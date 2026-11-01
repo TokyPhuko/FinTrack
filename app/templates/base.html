@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}FinTrack{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <meta name="telegram-web-app" content="">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="/">FinTrack</a></div>
+    <nav class="nav">
+      <a href="/" class="nav-link {% if active == 'home' %}active{% endif %}">Главная</a>
+      <a href="/transactions" class="nav-link {% if active == 'transactions' %}active{% endif %}">Траты</a>
+      <a href="/plans" class="nav-link {% if active == 'plans' %}active{% endif %}">Планы</a>
+      <a href="/budgets" class="nav-link {% if active == 'budgets' %}active{% endif %}">Бюджеты</a>
+      <a href="/accounts" class="nav-link {% if active == 'accounts' %}active{% endif %}">Счета</a>
+      <a href="/deposits" class="nav-link {% if active == 'deposits' %}active{% endif %}">Вклады</a>
+      <a href="/categories" class="nav-link {% if active == 'categories' %}active{% endif %}">Категории</a>
+      <a href="/reports" class="nav-link {% if active == 'reports' %}active{% endif %}">Отчёты</a>
+      <a href="/chat" class="nav-link {% if active == 'chat' %}active{% endif %}">Чат</a>
+    </nav>
+    <div class="user">
+      <span class="muted hide-sm">{{ user.username }}</span>
+      <form method="post" action="/logout" class="inline">
+        <button type="submit" class="btn btn-ghost">Выйти</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

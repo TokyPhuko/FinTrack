@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% set active = 'deposits' %}
+{% block title %}FinTrack — Вклады{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head"><h2>Новый вклад</h2></div>
+  <form id="dep-form" class="grid-form">
+    <label>Название
+      <input type="text" id="dep-title" required maxlength="256" placeholder="Вклад «Летний»">
+    </label>
+    <label>Банк
+      <input type="text" id="dep-bank" maxlength="128" placeholder="Т-Банк">
+    </label>
+    <label>Сумма
+      <input type="number" id="dep-amount" step="0.01" min="0.01" required>
+    </label>
+    <label>Ставка % годовых
+      <input type="number" id="dep-rate" step="0.01" min="0" max="100" required>
+    </label>
+    <label>Начало
+      <input type="date" id="dep-start" required>
+    </label>
+    <label>Окончание
+      <input type="date" id="dep-end" required>
+    </label>
+    <label class="span-2" style="flex-direction:row;align-items:center;gap:8px">
+      <input type="checkbox" id="dep-renew" style="width:auto"> Автопродление
+    </label>
+    <div class="form-actions span-2">
+      <button type="submit" class="btn btn-primary btn-inline">Добавить</button>
+      <span class="muted small" id="dep-error"></span>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Мои вклады</h2>
+    <span class="muted small" id="dep-total"></span>
+  </div>
+  <ul id="dep-list" class="list"><li class="muted">Загрузка…</li></ul>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Поиск ставок</h2>
+    <span class="muted small" id="search-source"></span>
+  </div>
+  <div class="grid-form">
+    <label>Сумма
+      <input type="number" id="search-amount" value="100000" min="1000">
+    </label>
+    <label>Срок (дней)
+      <input type="number" id="search-days" value="90" min="7">
+    </label>
+    <div class="form-actions span-2">
+      <button type="button" class="btn btn-primary btn-inline" id="search-btn">Найти</button>
+      <button type="button" class="btn btn-inline" id="discuss-btn">💬 Обсудить предложения</button>
+      <span class="muted small" id="search-note"></span>
+    </div>
+  </div>
+  <ul id="search-results" class="list" style="margin-top:12px"></ul>
+  <pre id="discuss-text" class="report-pre" style="display:none;margin-top:12px"></pre>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/deposits.js"></script>
+{% endblock %}

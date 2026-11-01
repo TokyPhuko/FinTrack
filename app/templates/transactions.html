@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% set active = 'transactions' %}
+{% block title %}FinTrack — Операции{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Новая операция</h2>
+  </div>
+
+  <div class="type-switch" id="tx-type-switch">
+    <button type="button" class="type-btn active" data-type="expense">Расход</button>
+    <button type="button" class="type-btn" data-type="income">Доход</button>
+    <button type="button" class="type-btn" data-type="transfer">Перевод</button>
+  </div>
+  <p class="muted small" id="transfer-hint" hidden>
+    Перевод перемещает деньги между счетами и <strong>не считается расходом</strong>.
+  </p>
+
+  <form id="tx-form" class="grid-form">
+    <input type="hidden" id="tx-type" value="expense">
+    <input type="hidden" id="tx-id" value="">
+
+    <label>Сумма
+      <input type="number" id="tx-amount" step="0.01" min="0.01" placeholder="0.00" required>
+    </label>
+
+    <label id="tx-category-field">Категория
+      <select id="tx-category" required></select>
+    </label>
+
+    <label id="tx-account-field">Счёт
+      <select id="tx-account" required></select>
+    </label>
+
+    <label id="tx-to-field" hidden>Счёт получателя
+      <select id="tx-to-account"></select>
+    </label>
+
+    <label>Дата
+      <input type="date" id="tx-date" required>
+    </label>
+
+    <label class="span-2">Заметка
+      <input type="text" id="tx-note" placeholder="Например: кофе" maxlength="500">
+    </label>
+
+    <div class="form-actions span-2">
+      <button type="submit" class="btn btn-primary btn-inline" id="tx-submit">Добавить</button>
+      <button type="button" class="btn btn-inline" id="tx-cancel" hidden>Отмена</button>
+      <span class="muted small" id="tx-error"></span>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>История</h2>
+    <div class="filters">
+      <input type="month" id="tx-month">
+      <select id="tx-filter-type">
+        <option value="">Все типы</option>
+        <option value="expense">Расходы</option>
+        <option value="income">Доходы</option>
+        <option value="transfer">Переводы</option>
+      </select>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table" id="tx-table">
+      <thead>
+        <tr>
+          <th>Дата</th>
+          <th>Тип</th>
+          <th>Категория</th>
+          <th>Счёт</th>
+          <th class="num">Сумма</th>
+          <th>Заметка</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tx-tbody">
+        <tr><td colspan="7" class="muted">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="legend small muted">
+    Переводы показаны серым и не входят в доходы/расходы.
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/transactions.js"></script>
+{% endblock %}

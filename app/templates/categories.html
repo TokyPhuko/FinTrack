@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% set active = 'categories' %}
+{% block title %}FinTrack — Категории{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Новая категория</h2>
+  </div>
+  <form id="cat-form" class="grid-form">
+    <label>Название
+      <input type="text" id="cat-name" placeholder="Например: Фитнес" required maxlength="128">
+    </label>
+    <label>Тип
+      <select id="cat-type">
+        <option value="expense">Расход</option>
+        <option value="income">Доход</option>
+      </select>
+    </label>
+    <label>Лимит в месяц (опц.)
+      <input type="number" id="cat-limit" step="0.01" min="0" placeholder="—">
+    </label>
+    <label>Иконка (эмодзи, опц.)
+      <input type="text" id="cat-icon" maxlength="8" placeholder="☕">
+    </label>
+    <div class="form-actions span-2">
+      <button type="submit" class="btn btn-primary btn-inline">Добавить</button>
+      <span class="muted small" id="cat-error"></span>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Расходные</h2>
+  </div>
+  <ul id="cat-expense-list" class="list"><li class="muted">Загрузка…</li></ul>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Доходные</h2>
+  </div>
+  <ul id="cat-income-list" class="list"><li class="muted">Загрузка…</li></ul>
+</section>
+
+<section class="panel muted small">
+  Категории с операциями не удаляются, а архивируются — история остаётся целой.
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/categories.js"></script>
+{% endblock %}
