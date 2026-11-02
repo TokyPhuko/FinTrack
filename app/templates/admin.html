@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set active = 'admin' %}
+{% block title %}FinTrack — Админка{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>👥 Пользователи</h2>
+    <button class="btn btn-ghost btn-sm" id="adm-refresh">↻ Обновить</button>
+  </div>
+  <div class="table-wrap">
+    <table class="table" id="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Логин</th>
+          <th>Роль</th>
+          <th>Telegram</th>
+          <th>Счета</th>
+          <th>Баланс</th>
+          <th>Расход/мес</th>
+          <th>Операций</th>
+          <th>Статус</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody><tr><td colspan="10" class="muted">Загрузка…</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="detail-panel" style="display:none">
+  <div class="panel-head">
+    <h2 id="detail-title">Профиль</h2>
+    <button class="btn btn-ghost btn-sm" id="detail-close">✕ Закрыть</button>
+  </div>
+
+  <div class="cards" id="detail-cards"></div>
+
+  <div class="grid-form" style="margin-top:12px">
+    <label>Новый пароль
+      <input type="text" id="d-password" placeholder="мин. 3 символа" minlength="3">
+    </label>
+    <div class="form-actions">
+      <button class="btn btn-inline" id="d-reset-pw">Сменить пароль</button>
+      <button class="btn btn-inline" id="d-unbind-tg">Отвязать TG</button>
+      <button class="btn btn-inline" id="d-impersonate">👁 Войти как</button>
+      <button class="btn btn-inline" id="d-toggle-active">Блокировка</button>
+      <button class="btn btn-inline" id="d-toggle-admin">Сделать админом</button>
+    </div>
+    <label>Уровень LLM (0–3)
+      <input type="number" id="d-politeness" min="0" max="3" step="1">
+    </label>
+    <div class="form-actions">
+      <button class="btn btn-inline" id="d-save-politeness">Сохранить LLM</button>
+      <span class="muted small" id="d-status"></span>
+    </div>
+  </div>
+
+  <h3 style="margin-top:16px">Счета</h3>
+  <ul class="list" id="d-accounts"></ul>
+
+  <h3 style="margin-top:16px">Последние операции</h3>
+  <ul class="list" id="d-transactions"></ul>
+
+  <h3 style="margin-top:16px">Категории</h3>
+  <div class="chips" id="d-categories" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+
+  <h3 style="margin-top:16px">Планы</h3>
+  <ul class="list" id="d-plans"></ul>
+
+  <h3 style="margin-top:16px">Вклады</h3>
+  <ul class="list" id="d-deposits"></ul>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/admin.js"></script>
+{% endblock %}

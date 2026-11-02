@@ -12,7 +12,10 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    KeyboardButton,
     Message,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
     WebAppInfo,
 )
 from sqlalchemy import delete, func, select
@@ -27,6 +30,55 @@ from app.services.parser import match_account, match_category, parse_message
 logger = logging.getLogger("fintrack.bot")
 router = Router(name="fintrack")
 settings = get_settings()
+
+
+def main_kb() -> ReplyKeyboardMarkup:
+    """Persistent button panel at the bottom."""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📊 Статистика"),
+                KeyboardButton(text="🔥 Стрик"),
+            ],
+            [
+                KeyboardButton(text="🕐 Операции"),
+                KeyboardButton(text="✅ Check-in"),
+            ],
+            [
+                KeyboardButton(text="📋 Отчёт"),
+                KeyboardButton(text="💰 Excel"),
+            ],
+            [
+                KeyboardButton(text="🏦 Счета"),
+                KeyboardButton(text="🏷 Категории"),
+            ],
+            [
+                KeyboardButton(text="🌐 Сайт"),
+                KeyboardButton(text="❓ Помощь"),
+            ],
+        ],
+        resize_keyboard=True,
+        is_persistent=True,
+    )
+
+
+# text → slash command for panel buttons
+BTN_MAP = {
+    "📊 Статистика": "/stats",
+    "🔥 Стрик": "/streak",
+    "🕐 Операции": "/last",
+    "✅ Check-in": "/check",
+    "📋 Отчёт": "/report",
+    "💰 Excel": "/xlsx",
+    "🏦 Счета": "/accounts",
+    "🏷 Категории": "/cats",
+    "🌐 Сайт": "/site",
+    "❓ Помощь": "/help",
+}
+
+
+def _site_url() -> str:
+    return (settings.mini_app_url or "http://127.0.0.1:8000").strip().rstrip("/")
 
 HELP_TEXT = (
     "Привет! Я FinTrack — учёт транзакций и финансовый помощник.\n\n"
@@ -57,6 +109,10 @@ HELP_TEXT = (
     "/xlsx — Excel-отчёт в чат\n"
     "/last — последние операции\n"
     "/undo — отменить последнюю\n"
+    "/register логин пароль — новый аккаунт\n"
+    "/bind логин пароль — вход\n"
+    "/unbind — отвязать Telegram\n"
+    "/site — ссылка на сайт (закрепить)\n"
     "/help — эта справка"
 )
 
@@ -145,50 +201,154 @@ async def cmd_start(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, tg_id)
         if user is None:
-            # auto-bind if single user without telegram yet
-            result = await db.execute(select(User).limit(1))
-            main = result.scalar_one_or_none()
-            if main is not None and main.telegram_id is None:
-                main.telegram_id = tg_id
-                await db.commit()
-                await message.answer(
-                    f"Привет! Аккаунт <b>{main.username}</b> привязан к Telegram.\n\n{HELP_TEXT}",
-                    parse_mode="HTML",
-                    reply_markup=kb,
-                )
-                return
             await message.answer(
-                "Этот Telegram ещё не привязан. Открой веб-приложение и привяжи аккаунт "
-                "в настройках, или напиши /bind с паролем: <code>/bind пароль</code>",
+                "👋 <b>Добро пожаловать в FinTrack!</b>\n\n"
+                "🆕 <b>Создать аккаунт</b> (регистрация):\n"
+                "<code>/register логин пароль</code>\n"
+                "Например: <code>/register toky mypass</code>\n\n"
+                "🔑 <b>Войти в существующий:</b>\n"
+                "<code>/bind логин пароль</code>\n"
+                "Например: <code>/bind admin admin</code>\n\n"
+                "Или открой веб: " + _site_url(),
                 parse_mode="HTML",
+                reply_markup=main_kb(),
             )
             return
-    await message.answer(HELP_TEXT, parse_mode="HTML", reply_markup=kb)
+    await message.answer(
+        f"✅ Вы вошли как <b>{user.username}</b>\n\n{HELP_TEXT}",
+        parse_mode="HTML",
+        reply_markup=main_kb(),
+    )
 
 
 @router.message(Command("help"))
 async def cmd_help(message: Message) -> None:
-    await message.answer(HELP_TEXT, parse_mode="HTML")
+    await message.answer(HELP_TEXT, parse_mode="HTML", reply_markup=main_kb())
+
+
+@router.message(Command("site"))
+async def cmd_site(message: Message) -> None:
+    """Send site link and pin it."""
+    url = _site_url()
+    sent = await message.answer(
+        f"🌐 <b>FinTrack</b>\n{url}\n\n"
+        f"Вход: логин/пароль с сайта или в боте\n"
+        f"Команда: /site — показать и закрепить снова",
+        parse_mode="HTML",
+        reply_markup=main_kb(),
+    )
+    try:
+        await message.bot.pin_chat_message(
+            chat_id=message.chat.id,
+            message_id=sent.message_id,
+            disable_notification=True,
+        )
+    except Exception as e:  # noqa: BLE001 — may fail without admin rights
+        logger.warning("pin failed: %s", e)
+
+
+@router.message(Command("register"))
+async def cmd_register(message: Message) -> None:
+    """Create a new account and bind this Telegram immediately."""
+    assert message.from_user is not None and message.text
+    parts = message.text.split()
+    if len(parts) < 3:
+        await message.answer(
+            "Использование: <code>/register логин пароль</code>\n"
+            "Например: <code>/register toky mypass</code>",
+            parse_mode="HTML",
+        )
+        return
+    username, password = parts[1], parts[2]
+    from app.auth import register_user
+
+    async with async_session_factory() as db:
+        result = await register_user(db, username, password)
+        if isinstance(result, str):
+            await message.answer(f"❌ {result}")
+            return
+        # free telegram from another user if needed
+        other = (
+            await db.execute(
+                select(User).where(
+                    User.telegram_id == message.from_user.id, User.id != result.id
+                )
+            )
+        ).scalar_one_or_none()
+        if other is not None:
+            other.telegram_id = None
+        result.telegram_id = message.from_user.id
+        await db.commit()
+        user = result
+    await message.answer(
+        f"🎉 Аккаунт <b>{user.username}</b> создан и привязан!\n"
+        f"Счёт «Карта» с балансом 0 и базовые категории уже есть.\n\n"
+        f"Просто напиши: <b>350 кофе</b>\n\n{HELP_TEXT}",
+        parse_mode="HTML",
+        reply_markup=main_kb(),
+    )
+
+
+@router.message(Command("unbind"))
+async def cmd_unbind(message: Message) -> None:
+    """Detach this Telegram from the current account."""
+    assert message.from_user is not None
+    async with async_session_factory() as db:
+        user = await _get_user(db, message.from_user.id)
+        if user is None:
+            await message.answer("Ты и так не привязан.")
+            return
+        user.telegram_id = None
+        await db.commit()
+        await message.answer(
+            f"Отвязано от <b>{user.username}</b>.\n"
+            "Войти снова: <code>/bind логин пароль</code>",
+            parse_mode="HTML",
+        )
 
 
 @router.message(Command("bind"))
 async def cmd_bind(message: Message) -> None:
+    """Bind this Telegram to an account: /bind username password."""
     assert message.from_user is not None and message.text
-    parts = message.text.split(maxsplit=1)
-    if len(parts) < 2:
-        await message.answer("Использование: <code>/bind пароль</code>", parse_mode="HTML")
+    parts = message.text.split()
+    # /bind username password
+    if len(parts) < 3:
+        await message.answer(
+            "Использование: <code>/bind логин пароль</code>\n"
+            "Нет аккаунта? <code>/register логин пароль</code>",
+            parse_mode="HTML",
+        )
         return
+    username = parts[1]
+    password = parts[2]
     from app.auth import verify_password
 
     async with async_session_factory() as db:
-        result = await db.execute(select(User).limit(1))
+        result = await db.execute(select(User).where(User.username == username))
         user = result.scalar_one_or_none()
-        if user is None or not verify_password(parts[1], user.password_hash):
-            await message.answer("Неверный пароль.")
+        if user is None or not verify_password(password, user.password_hash):
+            await message.answer(
+                "Неверный логин или пароль.\n"
+                "Формат: <code>/bind логин пароль</code>",
+                parse_mode="HTML",
+            )
             return
+        # Free telegram_id if it was attached to another user
+        other = (
+            await db.execute(
+                select(User).where(User.telegram_id == message.from_user.id, User.id != user.id)
+            )
+        ).scalar_one_or_none()
+        if other is not None:
+            other.telegram_id = None
         user.telegram_id = message.from_user.id
         await db.commit()
-    await message.answer(f"Готово! Аккаунт <b>{user.username}</b> привязан.\n\n{HELP_TEXT}", parse_mode="HTML")
+    await message.answer(
+        f"✅ Аккаунт <b>{user.username}</b> привязан.\n\n{HELP_TEXT}",
+        parse_mode="HTML",
+        reply_markup=main_kb(),
+    )
 
 
 @router.message(Command("xlsx"))
@@ -198,7 +358,7 @@ async def cmd_xlsx(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from datetime import datetime as _dt
 
@@ -224,7 +384,7 @@ async def cmd_accounts(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from app.services.streaks import visible_account_ids
 
@@ -263,7 +423,7 @@ async def cmd_account(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
 
         if action == "add":
@@ -357,7 +517,7 @@ async def cmd_cats(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         rows = (
             await db.execute(
@@ -398,7 +558,7 @@ async def cmd_cat(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
 
         if action == "add":
@@ -483,7 +643,7 @@ async def cmd_budget(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         cat = (
             await db.execute(
@@ -521,7 +681,7 @@ async def cmd_check(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from app.services.streaks import do_checkin, streak_info
 
@@ -544,7 +704,7 @@ async def cmd_streak(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from app.services.streaks import pair_summary, streak_info
 
@@ -583,7 +743,7 @@ async def cmd_pair(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from app.models import StreakPair
         from app.services.streaks import get_active_pair, get_pending_invites
@@ -678,7 +838,7 @@ async def cmd_report(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from app.services.llm import weekly_report
 
@@ -694,7 +854,7 @@ async def cmd_stats(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from app.services.streaks import visible_account_ids
 
@@ -772,7 +932,7 @@ async def cmd_last(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         from app.services.streaks import visible_account_ids
 
@@ -812,7 +972,7 @@ async def cmd_undo(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
         result = await db.execute(
             select(Transaction)
@@ -839,6 +999,26 @@ async def cmd_undo(message: Message) -> None:
 async def on_text(message: Message) -> None:
     assert message.from_user is not None and message.text
     text = message.text.strip()
+
+    # Panel button → call the matching command handler directly
+    if text in BTN_MAP:
+        handlers = {
+            "/stats": cmd_stats,
+            "/streak": cmd_streak,
+            "/last": cmd_last,
+            "/check": cmd_check,
+            "/report": cmd_report,
+            "/xlsx": cmd_xlsx,
+            "/accounts": cmd_accounts,
+            "/cats": cmd_cats,
+            "/site": cmd_site,
+            "/help": cmd_help,
+        }
+        fn = handlers.get(BTN_MAP[text])
+        if fn:
+            await fn(message)
+        return
+
     if text.startswith("/"):
         await message.answer("Неизвестная команда. /help")
         return
@@ -847,7 +1027,7 @@ async def on_text(message: Message) -> None:
     async with async_session_factory() as db:
         user = await _get_user(db, message.from_user.id)
         if user is None:
-            await message.answer("Сначала /start или /bind пароль.")
+            await message.answer("Сначала /start или /bind логин пароль.")
             return
 
         parsed = parse_message(text)

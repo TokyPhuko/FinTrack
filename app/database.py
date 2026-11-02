@@ -26,3 +26,16 @@ async def init_db() -> None:
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Seamless column migration for existing SQLite DBs
+        await conn.run_sync(_ensure_user_columns)
+
+
+def _ensure_user_columns(sync_conn) -> None:
+    from sqlalchemy import inspect, text
+
+    insp = inspect(sync_conn)
+    cols = {c["name"] for c in insp.get_columns("users")}
+    if "is_admin" not in cols:
+        sync_conn.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0"))
+    if "is_active" not in cols:
+        sync_conn.execute(text("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1"))

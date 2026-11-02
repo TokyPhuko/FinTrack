@@ -42,7 +42,7 @@ async def export_excel_to_telegram(
     if not user.telegram_id:
         raise HTTPException(
             status_code=400,
-            detail="Telegram не привязан — напиши /start боту или /bind пароль",
+            detail="Telegram не привязан — напиши /start боту или /bind логин пароль",
         )
     month = month or datetime.now().strftime("%Y-%m")
     try:

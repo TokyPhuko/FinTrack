@@ -12,14 +12,17 @@
     <p class="muted">Персональный учёт финансов</p>
     {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
     <form method="post" action="/login" class="stack">
-      <label>Логин
-        <input type="text" name="username" required autocomplete="username" autofocus>
+      <label>Логин (имя пользователя)
+        <input type="text" name="username" required autocomplete="username" autofocus placeholder="ваш логин">
       </label>
       <label>Пароль
         <input type="password" name="password" required autocomplete="current-password">
       </label>
       <button type="submit" class="btn btn-primary">Войти</button>
     </form>
+    <p class="muted small" style="margin-top:12px;text-align:center">
+      Нет аккаунта? <a href="/register">Регистрация</a>
+    </p>
   </main>
 </body>
 </html>

@@ -8,6 +8,10 @@
   <meta name="telegram-web-app" content="">
 </head>
 <body>
+  <div id="impersonate-banner" class="impersonate-banner" style="display:none">
+    <span id="impersonate-text">Просмотр чужого аккаунта</span>
+    <button type="button" class="btn btn-sm" id="impersonate-exit">↩ Вернуться в админку</button>
+  </div>
   <header class="topbar">
     <div class="brand"><a href="/">FinTrack</a></div>
     <nav class="nav">
@@ -20,6 +24,9 @@
       <a href="/categories" class="nav-link {% if active == 'categories' %}active{% endif %}">Категории</a>
       <a href="/reports" class="nav-link {% if active == 'reports' %}active{% endif %}">Отчёты</a>
       <a href="/chat" class="nav-link {% if active == 'chat' %}active{% endif %}">Чат</a>
+      {% if user and user.is_admin %}
+      <a href="/admin" class="nav-link {% if active == 'admin' %}active{% endif %}">Админка</a>
+      {% endif %}
     </nav>
     <div class="user">
       <span class="muted hide-sm">{{ user.username }}</span>
@@ -33,6 +40,25 @@
     {% block content %}{% endblock %}
   </main>
 
+  <script>
+    (async function () {
+      try {
+        const r = await fetch("/api/admin/impersonation", { headers: { Accept: "application/json" } });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d.impersonating) {
+          const b = document.getElementById("impersonate-banner");
+          document.getElementById("impersonate-text").textContent =
+            "👁 Вы в аккаунте «" + d.as + "» (режим просмотра админа)";
+          b.style.display = "flex";
+          document.getElementById("impersonate-exit").onclick = async () => {
+            await fetch("/api/admin/exit-impersonate", { method: "POST" });
+            window.location.href = "/admin";
+          };
+        }
+      } catch (e) {}
+    })();
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

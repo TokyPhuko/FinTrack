@@ -59,6 +59,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(256))
     telegram_id: Mapped[int | None] = mapped_column(Integer, unique=True, nullable=True)
     llm_politeness: Mapped[int] = mapped_column(Integer, default=1)  # 0=сарказм .. 3=полный мат
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     accounts: Mapped[list["Account"]] = relationship(back_populates="user")

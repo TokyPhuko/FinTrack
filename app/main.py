@@ -14,6 +14,7 @@ from app.database import async_session_factory, get_db, init_db
 from app.models import User
 from app.routers import (
     accounts,
+    admin,
     api,
     auth,
     budgets,
@@ -60,6 +61,8 @@ app.include_router(deposits.router)
 app.include_router(export.router)
 app.include_router(llm.router)
 app.include_router(social.router)
+app.include_router(admin.router)
+app.include_router(admin.meta_router)
 
 
 @app.get("/health")
@@ -149,3 +152,15 @@ async def page_chat(request: Request, user: User | None = Depends(get_optional_u
     if redirect:
         return redirect
     return templates.TemplateResponse(request, "chat.html", {"user": user})
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def page_admin(request: Request, user: User | None = Depends(get_optional_user)):
+    redirect = _require_page_user(user)
+    if redirect:
+        return redirect
+    if not user.is_admin:
+        from fastapi.responses import RedirectResponse
+
+        return RedirectResponse("/", status_code=303)
+    return templates.TemplateResponse(request, "admin.html", {"user": user})

@@ -25,6 +25,49 @@ async def login_page(request: Request, user: User | None = Depends(get_optional_
     return templates.TemplateResponse(request, "login.html", {"error": None})
 
 
+@router.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request, user: User | None = Depends(get_optional_user)):
+    if user:
+        return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse(request, "register.html", {"error": None})
+
+
+@router.post("/register")
+async def register(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    password2: str = Form(default=""),
+    db: AsyncSession = Depends(get_db),
+):
+    if password != password2:
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {"error": "Пароли не совпадают"},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    from app.auth import register_user
+
+    result = await register_user(db, username, password)
+    if isinstance(result, str):
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {"error": result},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    redirect = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    redirect.set_cookie(
+        "session",
+        create_session_token(result.id),
+        httponly=True,
+        samesite="lax",
+        max_age=60 * 60 * 24 * 30,
+    )
+    return redirect
+
+
 @router.post("/login")
 async def login(
     request: Request,
